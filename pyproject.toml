@@ -14,3 +14,9 @@ product = "Expense Tracker"
 
 [tool.flet.app]
 path = "."
+
+[tool.flet.android]
+# Build for arm64-v8a only (virtually all Android phones in active use) instead of the
+# default arm64-v8a + armeabi-v7a + x86_64 "fat" APK, which roughly triples the size by
+# bundling a separate embedded Python runtime + native libs per architecture.
+target_arch = ["arm64-v8a"]

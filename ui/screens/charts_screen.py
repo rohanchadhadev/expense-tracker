@@ -78,10 +78,10 @@ def build(state: AppState):
             ],
         )
 
-    pie_section = build_pie_section(category_spend, "No expenses this month yet.")
     pie_section_no_bills = build_pie_section(
         category_spend_no_bills, "No expenses (excluding Bills) this month yet."
     )
+    pie_section = build_pie_section(category_spend, "No expenses this month yet.")
 
     months = trailing_months(month, 6)
     totals = repo.monthly_totals(months)
@@ -123,7 +123,7 @@ def build(state: AppState):
                             expand=True,
                             alignment=ft.Alignment.CENTER,
                             content=ft.Text(
-                                f"By category — {month_label(month)}",
+                                month_label(month),
                                 size=18,
                                 weight=ft.FontWeight.BOLD,
                                 max_lines=1,
@@ -135,8 +135,6 @@ def build(state: AppState):
                     ],
                 ),
             ),
-            ft.Container(padding=ft.Padding.symmetric(horizontal=16), content=pie_section),
-            ft.Divider(),
             ft.Container(
                 padding=ft.Padding.symmetric(horizontal=16, vertical=4),
                 content=ft.Text(
@@ -147,6 +145,14 @@ def build(state: AppState):
                 padding=ft.Padding.symmetric(horizontal=16),
                 content=pie_section_no_bills,
             ),
+            ft.Divider(),
+            ft.Container(
+                padding=ft.Padding.symmetric(horizontal=16, vertical=4),
+                content=ft.Text(
+                    "By category (including Bills)", size=16, weight=ft.FontWeight.BOLD
+                ),
+            ),
+            ft.Container(padding=ft.Padding.symmetric(horizontal=16), content=pie_section),
             ft.Divider(),
             ft.Container(
                 padding=ft.Padding.symmetric(horizontal=16),
