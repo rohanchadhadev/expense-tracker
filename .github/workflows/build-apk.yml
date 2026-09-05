@@ -15,17 +15,13 @@ jobs:
         with:
           python-version: "3.12"
 
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-
       - name: Install Python dependencies
         run: |
           pip install -r requirements.txt
 
       - name: Build APK
         run: |
-          flet build apk --verbose
+          flet build apk --yes --verbose
 
       - name: Locate APK
         id: locate
