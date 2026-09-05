@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+expense_tracker.db
+build/
+storage/
+*.log

@@ -1,0 +1,16 @@
+[project]
+name = "expense-tracker"
+version = "0.1.0"
+description = "Offline-first expense tracker"
+requires-python = ">=3.10"
+dependencies = [
+    "flet==0.86.5",
+    "flet-charts==0.86.5",
+]
+
+[tool.flet]
+org = "com.expensetracker"
+product = "Expense Tracker"
+
+[tool.flet.app]
+path = "."
