@@ -59,7 +59,7 @@ def build(state: AppState):
                     expand=True,
                     alignment=ft.Alignment.CENTER,
                     content=ft.Text(
-                        f"Budgets — {month_label(month)}",
+                        month_label(month),
                         size=18,
                         weight=ft.FontWeight.BOLD,
                         max_lines=1,

@@ -16,6 +16,8 @@ from utils.formatting import (
 
 def _to_date(value) -> datetime.date:
     if isinstance(value, datetime.datetime):
+        if value.tzinfo is not None:
+            value = value.astimezone()
         return value.date()
     return value
 
