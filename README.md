@@ -18,7 +18,14 @@ All data lives in a local SQLite database on the phone. There is no backend, no 
 
 This repo is private, so links below only work while signed in to a GitHub account with access to it.
 
-### Version 2.0 (current)
+### Version 2.1 (current)
+
+**[Download v2.1](https://github.com/rohanchadhadev/expense-tracker/releases/download/v2.1/expense-tracker.apk)**
+
+- Home screen is now fully scrollable — the calendar and the selected day's transaction list scroll together as one page instead of competing for space
+- Fixed the Savings budget calculation: an overage in another category now correctly deducts from Savings instead of appearing to add to it
+
+### Version 2.0
 
 **[Download v2.0](https://github.com/rohanchadhadev/expense-tracker/releases/download/v2.0/expense-tracker.apk)**
 
@@ -34,7 +41,7 @@ The original release: expenses, categories, charts, and a single budget per cate
 
 ---
 
-Every push to `master` also rebuilds a rolling **[latest development build](https://github.com/rohanchadhadev/expense-tracker/releases/download/latest/expense-tracker.apk)**, which may be ahead of v2.0 with unreleased changes.
+Every push to `master` also rebuilds a rolling **[latest development build](https://github.com/rohanchadhadev/expense-tracker/releases/download/latest/expense-tracker.apk)**, which may be ahead of v2.1 with unreleased changes.
 
 ## Installing on Android
 
