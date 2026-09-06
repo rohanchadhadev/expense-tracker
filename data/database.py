@@ -1,3 +1,4 @@
+import datetime
 import sqlite3
 from pathlib import Path
 
@@ -29,10 +30,12 @@ def init_db() -> None:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL UNIQUE,
                 color TEXT NOT NULL,
-                is_default INTEGER NOT NULL DEFAULT 0
+                is_default INTEGER NOT NULL DEFAULT 0,
+                is_savings INTEGER NOT NULL DEFAULT 0
             )
             """
         )
+        _migrate_categories_table(conn)
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS expenses (
@@ -45,11 +48,13 @@ def init_db() -> None:
             )
             """
         )
+        _migrate_budgets_table(conn)
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS budgets (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                category_id INTEGER UNIQUE REFERENCES categories(id),
+                category_id INTEGER REFERENCES categories(id),
+                month TEXT NOT NULL,
                 monthly_amount REAL NOT NULL
             )
             """
@@ -69,9 +74,57 @@ def init_db() -> None:
                 "INSERT INTO categories (name, color, is_default) VALUES (?, ?, 1)",
                 DEFAULT_CATEGORIES,
             )
+        has_savings = conn.execute(
+            "SELECT COUNT(*) FROM categories WHERE is_savings = 1"
+        ).fetchone()[0]
+        if not has_savings:
+            conn.execute(
+                "INSERT INTO categories (name, color, is_default, is_savings) "
+                "VALUES ('Savings', '#26A69A', 1, 1)"
+            )
         conn.execute(
             "INSERT OR IGNORE INTO settings (key, value) VALUES ('currency', 'USD')"
         )
         conn.commit()
     finally:
         conn.close()
+
+
+def _migrate_categories_table(conn: sqlite3.Connection) -> None:
+    """Older installs' categories table predates the is_savings column."""
+    columns = {row["name"] for row in conn.execute("PRAGMA table_info(categories)").fetchall()}
+    if "is_savings" not in columns:
+        conn.execute("ALTER TABLE categories ADD COLUMN is_savings INTEGER NOT NULL DEFAULT 0")
+
+
+def _migrate_budgets_table(conn: sqlite3.Connection) -> None:
+    """Budgets used to be a single value per category shared across all months.
+    Rebuild the table with a `month` column, carrying old values into the
+    current month so per-month budgets can start from there."""
+    table_exists = conn.execute(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'budgets'"
+    ).fetchone()
+    if not table_exists:
+        return
+    columns = {row["name"] for row in conn.execute("PRAGMA table_info(budgets)").fetchall()}
+    if "month" in columns:
+        return
+
+    current_month = datetime.date.today().strftime("%Y-%m")
+    old_rows = conn.execute("SELECT category_id, monthly_amount FROM budgets").fetchall()
+    conn.execute("DROP TABLE budgets")
+    conn.execute(
+        """
+        CREATE TABLE budgets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            category_id INTEGER REFERENCES categories(id),
+            month TEXT NOT NULL,
+            monthly_amount REAL NOT NULL
+        )
+        """
+    )
+    for row in old_rows:
+        conn.execute(
+            "INSERT INTO budgets (category_id, month, monthly_amount) VALUES (?, ?, ?)",
+            (row["category_id"], current_month, row["monthly_amount"]),
+        )

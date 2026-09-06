@@ -18,6 +18,7 @@ def _category_from_row(row) -> Category:
         name=row["name"],
         color=row["color"],
         is_default=bool(row["is_default"]),
+        is_savings=bool(row["is_savings"]),
     )
 
 
@@ -250,7 +251,7 @@ def monthly_totals(months: list[str]) -> dict[str, float]:
 # --- Budgets ---------------------------------------------------------------
 
 
-def list_budgets() -> list[Budget]:
+def list_budgets(month: str) -> list[Budget]:
     conn = get_connection()
     try:
         rows = conn.execute(
@@ -258,7 +259,9 @@ def list_budgets() -> list[Budget]:
             SELECT b.id, b.category_id, b.monthly_amount, c.name AS category_name
             FROM budgets b
             LEFT JOIN categories c ON c.id = b.category_id
-            """
+            WHERE b.month = ?
+            """,
+            (month,),
         ).fetchall()
         return [
             Budget(
@@ -273,19 +276,20 @@ def list_budgets() -> list[Budget]:
         conn.close()
 
 
-def get_budget(category_id: Optional[int]) -> Optional[Budget]:
+def get_budget(category_id: Optional[int], month: str) -> Optional[Budget]:
     conn = get_connection()
     try:
         if category_id is None:
             row = conn.execute(
                 "SELECT id, category_id, monthly_amount FROM budgets "
-                "WHERE category_id IS NULL"
+                "WHERE category_id IS NULL AND month = ?",
+                (month,),
             ).fetchone()
         else:
             row = conn.execute(
                 "SELECT id, category_id, monthly_amount FROM budgets "
-                "WHERE category_id = ?",
-                (category_id,),
+                "WHERE category_id = ? AND month = ?",
+                (category_id, month),
             ).fetchone()
         if row is None:
             return None
@@ -299,16 +303,18 @@ def get_budget(category_id: Optional[int]) -> Optional[Budget]:
         conn.close()
 
 
-def set_budget(category_id: Optional[int], amount: float) -> None:
+def set_budget(category_id: Optional[int], month: str, amount: float) -> None:
     conn = get_connection()
     try:
         if category_id is None:
             existing = conn.execute(
-                "SELECT id FROM budgets WHERE category_id IS NULL"
+                "SELECT id FROM budgets WHERE category_id IS NULL AND month = ?",
+                (month,),
             ).fetchone()
         else:
             existing = conn.execute(
-                "SELECT id FROM budgets WHERE category_id = ?", (category_id,)
+                "SELECT id FROM budgets WHERE category_id = ? AND month = ?",
+                (category_id, month),
             ).fetchone()
         if existing:
             conn.execute(
@@ -317,24 +323,45 @@ def set_budget(category_id: Optional[int], amount: float) -> None:
             )
         else:
             conn.execute(
-                "INSERT INTO budgets (category_id, monthly_amount) VALUES (?, ?)",
-                (category_id, amount),
+                "INSERT INTO budgets (category_id, month, monthly_amount) VALUES (?, ?, ?)",
+                (category_id, month, amount),
             )
         conn.commit()
     finally:
         conn.close()
 
 
-def delete_budget(category_id: Optional[int]) -> None:
+def delete_budget(category_id: Optional[int], month: str) -> None:
     conn = get_connection()
     try:
         if category_id is None:
-            conn.execute("DELETE FROM budgets WHERE category_id IS NULL")
+            conn.execute(
+                "DELETE FROM budgets WHERE category_id IS NULL AND month = ?", (month,)
+            )
         else:
-            conn.execute("DELETE FROM budgets WHERE category_id = ?", (category_id,))
+            conn.execute(
+                "DELETE FROM budgets WHERE category_id = ? AND month = ?",
+                (category_id, month),
+            )
         conn.commit()
     finally:
         conn.close()
+
+
+def copy_budgets(source_month: str, target_month: str) -> int:
+    """Copy every budget from source_month into target_month, overwriting any
+    values already set for target_month. Returns the number of budgets copied."""
+    conn = get_connection()
+    try:
+        rows = conn.execute(
+            "SELECT category_id, monthly_amount FROM budgets WHERE month = ?",
+            (source_month,),
+        ).fetchall()
+    finally:
+        conn.close()
+    for row in rows:
+        set_budget(row["category_id"], target_month, float(row["monthly_amount"]))
+    return len(rows)
 
 
 # --- Settings ----------------------------------------------------------

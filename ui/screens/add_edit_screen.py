@@ -25,7 +25,7 @@ def _to_date(value) -> datetime.date:
 def _check_budget_alert(state: AppState, category_id: int, date_value: str) -> None:
     month = date_value[:7]
 
-    cat_budget = repo.get_budget(category_id)
+    cat_budget = repo.get_budget(category_id, month)
     if cat_budget:
         spent = repo.total_for_category_month(category_id, month)
         if spent > cat_budget.monthly_amount:
@@ -38,7 +38,7 @@ def _check_budget_alert(state: AppState, category_id: int, date_value: str) -> N
             )
             return
 
-    overall_budget = repo.get_budget(None)
+    overall_budget = repo.get_budget(None, month)
     if overall_budget:
         total = repo.total_for_month(month)
         if total > overall_budget.monthly_amount:
@@ -51,7 +51,7 @@ def _check_budget_alert(state: AppState, category_id: int, date_value: str) -> N
 
 def open_expense_dialog(state: AppState, expense: Optional[Expense] = None) -> None:
     page = state.page
-    categories = repo.list_categories()
+    categories = [c for c in repo.list_categories() if not c.is_savings]
     if not categories:
         state.notify("Add a category first.", error=True)
         return

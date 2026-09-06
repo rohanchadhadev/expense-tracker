@@ -19,7 +19,8 @@ Every push to `master` rebuilds the APK automatically and updates the `latest` r
 - Add, edit, and delete expenses
 - Custom categories with color tags and filtering
 - Pie and bar charts summarizing spending by category and by month
-- Monthly budgets (overall and per-category) with over-budget alerts
+- Monthly budgets (overall and per-category) that reset each month, with a one-tap copy from the previous month and over-budget alerts
+- A Savings category that keeps its full target unless another category goes over budget that month, in which case the overage is deducted from it
 - Currency selection
 
 ## Running locally (development)

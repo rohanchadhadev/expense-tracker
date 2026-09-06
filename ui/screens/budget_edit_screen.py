@@ -8,7 +8,11 @@ from utils.formatting import get_currency_symbol
 
 
 def open_budget_dialog(
-    state: AppState, category_id: Optional[int], label: str, current_amount: float
+    state: AppState,
+    category_id: Optional[int],
+    label: str,
+    current_amount: float,
+    month: str,
 ) -> None:
     page = state.page
 
@@ -25,7 +29,7 @@ def open_budget_dialog(
         page.pop_dialog()
 
     def clear(e: ft.Event):
-        repo.delete_budget(category_id)
+        repo.delete_budget(category_id, month)
         close()
         state.refresh()
 
@@ -41,7 +45,7 @@ def open_budget_dialog(
             error_text.update()
             return
 
-        repo.set_budget(category_id, amount)
+        repo.set_budget(category_id, month, amount)
         close()
         state.refresh()
 

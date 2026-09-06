@@ -8,6 +8,7 @@ class Category:
     name: str
     color: str
     is_default: bool
+    is_savings: bool = False
 
 
 @dataclass
