@@ -9,6 +9,7 @@ class AppState:
     def __init__(self, page: ft.Page):
         self.page = page
         self.selected_month: str = current_month()
+        self.selected_date: Optional[str] = None
         self.current_index: int = 0
         self._render: Optional[Callable[[int], None]] = None
 

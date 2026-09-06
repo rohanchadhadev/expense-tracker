@@ -1,11 +1,20 @@
+import datetime
+
 import flet as ft
 
 from data import repository as repo
 from ui.app_state import AppState
+from ui.components.calendar_grid import build_calendar_grid
 from ui.components.confirm_dialog import confirm_action
 from ui.components.expense_tile import build_expense_tile
 from ui.screens.add_edit_screen import open_expense_dialog
-from utils.formatting import format_currency, month_label, shift_month
+from utils.formatting import (
+    current_month,
+    format_currency,
+    format_date_display,
+    month_label,
+    shift_month,
+)
 
 
 def build(state: AppState):
@@ -14,12 +23,23 @@ def build(state: AppState):
     expenses = repo.list_expenses(month)
     total = repo.total_for_month(month)
 
+    today_iso = datetime.date.today().isoformat()
+    selected_date = state.selected_date
+    if selected_date is None and month == current_month():
+        selected_date = today_iso
+
     def go_prev(e: ft.Event):
         state.selected_month = shift_month(state.selected_month, -1)
+        state.selected_date = None
         state.refresh()
 
     def go_next(e: ft.Event):
         state.selected_month = shift_month(state.selected_month, 1)
+        state.selected_date = None
+        state.refresh()
+
+    def select_date(d: str):
+        state.selected_date = d
         state.refresh()
 
     def edit_expense(expense):
@@ -68,30 +88,59 @@ def build(state: AppState):
         ),
     )
 
-    if expenses:
-        body: ft.Control = ft.ListView(
+    calendar_grid = build_calendar_grid(month, expenses, selected_date, today_iso, select_date)
+
+    day_expenses = [e for e in expenses if e.date == selected_date] if selected_date else []
+
+    if day_expenses:
+        list_body: ft.Control = ft.ListView(
             expand=True,
             spacing=8,
             padding=ft.Padding.symmetric(horizontal=16),
             controls=[
-                build_expense_tile(exp, edit_expense, delete_expense) for exp in expenses
+                build_expense_tile(exp, edit_expense, delete_expense) for exp in day_expenses
             ],
         )
     else:
-        body = ft.Container(
+        message = (
+            "No expenses on this date."
+            if selected_date
+            else "Tap a date above to view its expenses."
+        )
+        list_body = ft.Container(
             expand=True,
             alignment=ft.Alignment.CENTER,
             content=ft.Column(
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 controls=[
                     ft.Icon(ft.Icons.RECEIPT_LONG, size=48, color=ft.Colors.OUTLINE),
-                    ft.Text("No expenses yet this month.", color=ft.Colors.OUTLINE),
+                    ft.Text(message, color=ft.Colors.OUTLINE),
                 ],
             ),
         )
 
-    content = ft.Column(expand=True, controls=[header, body])
+    day_label = (
+        ft.Container(
+            padding=ft.Padding.only(left=16, right=16, top=8, bottom=4),
+            content=ft.Text(
+                format_date_display(selected_date), size=14, weight=ft.FontWeight.BOLD
+            ),
+        )
+        if selected_date
+        else ft.Container(height=8)
+    )
+
+    content = ft.Column(
+        expand=True,
+        controls=[header, calendar_grid, ft.Divider(height=1), day_label, list_body],
+    )
     fab = ft.FloatingActionButton(
-        icon=ft.Icons.ADD, on_click=lambda e: open_expense_dialog(state)
+        icon=ft.Icons.ADD,
+        on_click=lambda e: open_expense_dialog(
+            state,
+            default_date=(
+                datetime.date.fromisoformat(selected_date) if selected_date else None
+            ),
+        ),
     )
     return content, fab

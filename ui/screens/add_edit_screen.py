@@ -49,7 +49,11 @@ def _check_budget_alert(state: AppState, category_id: int, date_value: str) -> N
             )
 
 
-def open_expense_dialog(state: AppState, expense: Optional[Expense] = None) -> None:
+def open_expense_dialog(
+    state: AppState,
+    expense: Optional[Expense] = None,
+    default_date: Optional[datetime.date] = None,
+) -> None:
     page = state.page
     categories = [c for c in repo.list_categories() if not c.is_savings]
     if not categories:
@@ -60,7 +64,7 @@ def open_expense_dialog(state: AppState, expense: Optional[Expense] = None) -> N
     initial_date = (
         datetime.date.fromisoformat(expense.date)
         if expense
-        else datetime.date.today()
+        else (default_date or datetime.date.today())
     )
     selected_date = {"value": initial_date}
 
