@@ -93,13 +93,15 @@ def build(state: AppState):
     day_expenses = [e for e in expenses if e.date == selected_date] if selected_date else []
 
     if day_expenses:
-        list_body: ft.Control = ft.ListView(
-            expand=True,
-            spacing=8,
+        list_body: ft.Control = ft.Container(
             padding=ft.Padding.symmetric(horizontal=16),
-            controls=[
-                build_expense_tile(exp, edit_expense, delete_expense) for exp in day_expenses
-            ],
+            content=ft.Column(
+                spacing=8,
+                controls=[
+                    build_expense_tile(exp, edit_expense, delete_expense)
+                    for exp in day_expenses
+                ],
+            ),
         )
     else:
         message = (
@@ -108,7 +110,7 @@ def build(state: AppState):
             else "Tap a date above to view its expenses."
         )
         list_body = ft.Container(
-            expand=True,
+            height=180,
             alignment=ft.Alignment.CENTER,
             content=ft.Column(
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
@@ -132,6 +134,7 @@ def build(state: AppState):
 
     content = ft.Column(
         expand=True,
+        scroll=ft.ScrollMode.AUTO,
         controls=[header, calendar_grid, ft.Divider(height=1), day_label, list_body],
     )
     fab = ft.FloatingActionButton(

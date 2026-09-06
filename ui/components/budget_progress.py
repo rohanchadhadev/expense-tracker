@@ -5,7 +5,9 @@ import flet as ft
 from utils.formatting import format_currency
 
 
-def _progress_color(ratio: float) -> str:
+def _progress_color(ratio: float, invert: bool = False) -> str:
+    if invert:
+        ratio = 1.0 - ratio
     if ratio >= 1.0:
         return ft.Colors.RED_400
     if ratio >= 0.8:
@@ -18,10 +20,14 @@ def build_budget_progress(
     spent: float,
     limit: float,
     on_edit: Optional[Callable[[ft.Event], None]] = None,
+    invert: bool = False,
 ) -> ft.Control:
+    """`invert=True` treats `spent` as a "remaining" amount instead of a "used"
+    amount — e.g. for Savings, where a full bar close to `limit` is good (green)
+    and a bar drained toward 0 is bad (red), the opposite of a spending budget."""
     ratio = spent / limit if limit > 0 else 0.0
     bar_value = min(ratio, 1.0) if limit > 0 else 0.0
-    color = _progress_color(ratio)
+    color = _progress_color(ratio, invert=invert)
 
     header_controls: list[ft.Control] = [
         ft.Text(

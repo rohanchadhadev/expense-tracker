@@ -96,15 +96,17 @@ def build(state: AppState):
     if savings_category is not None:
         savings_budget = budgets.get(savings_category.id)
         savings_target = savings_budget.monthly_amount if savings_budget else 0.0
+        retained_savings = max(savings_target - total_overage, 0.0)
         rows.append(ft.Divider())
         rows.append(
             build_budget_progress(
                 "Savings",
-                total_overage,
+                retained_savings,
                 savings_target,
                 on_edit=lambda e, a=savings_target: open_budget_dialog(
                     state, savings_category.id, "Savings", a, month
                 ),
+                invert=True,
             )
         )
 
